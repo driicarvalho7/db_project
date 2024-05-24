@@ -13,54 +13,6 @@ password = os.getenv('DB_PASSWORD')
 host = os.getenv('DB_HOST')
 port = os.getenv('DB_PORT')
 
-# def exec_insertion_funcionario(cpf, cargo, nome, endereco, telefone, t_sanguineo):
-#     sql = "INSERT INTO funcionario (cpf, cargo, nome, endereco, telefone, tipo_sanguineo) VALUES (%s, %s, %s, %s, %s, %s);"
-#     data = (cpf, cargo, nome, endereco, telefone, t_sanguineo, )
-    
-#     # Inicia transacao
-#     conn = psycopg2.connect(f"dbname={dbname} user={username} password={password}")
-#     cur = conn.cursor()
-#     try:
-#         cur.execute(sql, data)
-#         print("Funcionario inserido com sucesso!")
-#         print(cpf, cargo, nome, endereco, telefone, t_sanguineo)
-
-#     #Tratamento de Erros
-#     except psycopg2.errors.NotNullViolation as ex:        
-#         print("[ERRO] Um dos valores inseridos não pode ser null. Atribua um valor concreto para ele.")
-#         print(ex)
-#         pass
-#     except psycopg2.errors.UniqueViolation as ex:
-#         print("[ERRO] Este valor de chave já existe no banco, por favor, insira um valor válido e único")
-#         print(ex)
-#         pass
-#     except psycopg2.errors.CheckViolation as ex:
-#         print("[ERRO] Opa, cuidado! Para esse valor existir, precisa seguir umas regrinhas, tente novamente")
-#         print(ex)
-#         pass
-#     except psycopg2.errors.ForeignKeyViolation as ex:
-#         print("[ERRO] ops, um dos valores é chave estrangeira e precisa existir em outra tabela. Tente um valor já existente")
-#         print(ex)
-#         pass
-#     except Exception as ex:
-#         print("[ERRO] Erro de origem desconhecida.")
-#         print(ex)
-
-#     conn.commit()
-#     cur.close()
-#     conn.close()
-#     # Encerra transacao
-
-# def inserir_funcionario():
-#     print("\n============= CADASTRAR FUNCIONARIO =============\n")
-#     cpf = str(input("Insira o CPF: "))
-#     cargo = str(input("Insira o cargo: "))
-#     nome = str(input("Insira o nome: "))
-#     endereco = str(input("Insira o endereço: "))
-#     telefone = str(input("Insira o telefone: "))
-#     t_sanguineo = str(input("Insira o tipo sanguineo: "))
-#     exec_insertion_funcionario(cpf, cargo, nome, endereco, telefone, t_sanguineo)
-
 #definindo esquemas para pegar os headers das tabelas
 esquemas = {
     "Individuo": ['CPF', 'Nome', 'Ficha', 'Genero', 'Naturalidade', 'Data de Nascimento', 'Profissao', 'Contato'],
