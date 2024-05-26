@@ -105,13 +105,13 @@ CREATE TABLE EquipeDeApoio (
 CREATE TABLE Apoiador (
   CPF VARCHAR(14),
   EquipeOrdem INTEGER NOT NULL,
-  EquipeCandidato VARCHAR(14) NOT NULL,
-  EquipeAno INTEGER NOT NULL,
-  nome VARCHAR(100),
-  contribuicao NUMERIC(10,2),
+  EquipeCandidaturaCandidato VARCHAR(14) NOT NULL,
+  EquipeCandidaturaAno INTEGER NOT NULL,
+  funcao VARCHAR(30),
+  dataIngresso DATE,
 
-  CONSTRAINT pk_cpf_apoiador PRIMARY KEY(CPF, EquipeOrdem, EquipeCandidato, EquipeAno),
-  CONSTRAINT fk_equipe_apoiador FOREIGN KEY(EquipeOrdem, EquipeCandidato, EquipeAno) REFERENCES EquipeDeApoio(ordem, candidato, ano)
+  CONSTRAINT pk_cpf_apoiador PRIMARY KEY(CPF, EquipeOrdem, EquipeCandidaturaCandidato, EquipeCandidaturaAno),
+  CONSTRAINT fk_equipe_apoiador FOREIGN KEY(EquipeOrdem, EquipeCandidaturaCandidato, EquipeCandidaturaAno) REFERENCES EquipeDeApoio(ordem, candidato, ano)
     ON UPDATE CASCADE
     ON DELETE CASCADE,
   CONSTRAINT ck_cpf_apoiador CHECK (CPF ~ '^\d{3}\.\d{3}\.\d{3}-\d{2}$')

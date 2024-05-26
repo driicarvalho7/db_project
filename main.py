@@ -44,10 +44,22 @@ def consultar(tabela):
 
     conn = conectar()
     cur = conn.cursor()
-    sql = f"SELECT * FROM {tabela}"
+    if tabela == "Candidato":
+        sql = f"""
+                SELECT 
+                    c.cpf,
+                    i.nome,
+                    c.partido
+                FROM candidato c
+                JOIN individuo i
+                ON i.cpf = c.cpf
+                """
+        headers = ["CPF", "Nome", "Partido"]
+    else:
+        sql = f"SELECT * FROM {tabela}"
+        headers = esquemas[tabela]
    
-    headers = esquemas[tabela]
-
+    
     try:
         cur.execute(sql)
         records = cur.fetchall()
@@ -93,7 +105,22 @@ def listar_candidaturas(ano=None, nome_candidato=None, nome_cargo=None, ordenaca
     conn = conectar()
     cur = conn.cursor()
     
-    sql = "SELECT * FROM Candidatura WHERE TRUE"
+    sql = f"""
+            SELECT 
+                c.candidato,
+                candidato.nome,
+                c.ano,
+                c.cargonome,
+                c.cargolocal,
+                c.vice,
+                vice.nome,
+                c.pleito
+            FROM Candidatura c
+            JOIN Individuo candidato
+            ON c.candidato = candidato.cpf 
+            LEFT JOIN Individuo vice
+            ON c.Vice = vice.CPF
+            """
     if ano:
         sql += f" AND Ano = {ano}"
     if nome_candidato:
@@ -102,7 +129,7 @@ def listar_candidaturas(ano=None, nome_candidato=None, nome_cargo=None, ordenaca
         sql += f" AND \"Nome do Cargo\" = '{nome_cargo}'"
     sql += f" ORDER BY {ordenacao}"
 
-    headers = esquemas["Candidatura"]
+    headers = ["CPF Candidato", "Nome Candidato", "Ano Candidatura", "Nome do Cargo", "Local do Cargo", "CPF Vice", "Nome Vice", "Pleito"]
 
     try:
         cur.execute(sql)
@@ -126,14 +153,25 @@ def relatorio_candidaturas_eleitos():
     conn = conectar()
     cur = conn.cursor()
 
-    sql = """
-    SELECT Candidatura.*, Vice.Nome AS Vice_Nome
-    FROM Candidatura
-    LEFT JOIN Individuo Vice ON Candidatura.Vice = Vice.CPF
-    WHERE Candidatura.Pleito = 1
-    """
+    sql = f"""
+            SELECT 
+                c.candidato,
+                candidato.nome,
+                c.ano,
+                c.cargonome,
+                c.cargolocal,
+                c.vice,
+                vice.nome,
+                c.pleito
+            FROM Candidatura c
+            JOIN Individuo candidato
+            ON c.candidato = candidato.cpf 
+            LEFT JOIN Individuo vice
+            ON c.Vice = vice.CPF
+            WHERE c.Pleito = 1
+            """
     
-    headers = esquemas["Candidatura"] + ['Vice_Nome']
+    headers = ["CPF do Candidato", "Nome do Candidato", "Ano da Candidatura", "Nome do Cargo", "Local do Cargo", "CPF do Vice", "Nome do Vice", "Pleito"]
 
     try:
         cur.execute(sql)
@@ -157,10 +195,10 @@ def listar_ficha_limpa():
     conn = conectar()
     cur = conn.cursor()
 
-    sql = """
-    SELECT * FROM Individuo
-    WHERE Ficha = 'LIMPA'
-    """
+    sql = f"""
+            SELECT * FROM Individuo
+            WHERE Ficha = 'LIMPA'
+            """
     
     headers = esquemas["Individuo"]
 
