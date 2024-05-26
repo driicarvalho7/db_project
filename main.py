@@ -28,6 +28,21 @@ esquemas = {
     "DoacaoFisica": ['Ordem', 'Doador Fisico', 'Candidatura Candidato', 'Candidatura Ano', 'Valor']
 }
 
+# Definindo chaves primárias para as tabelas
+chaves_primarias = {
+    "Individuo": ['CPF'],
+    "ProcessoJudicial": ['ID'],
+    "Partido": ['nome'],
+    "Candidato": ['CPF'],
+    "Cargo": ['nomeCargo', 'localCargo'],
+    "Candidatura": ['candidato', 'ano'],
+    "EquipeDeApoio": ['ordem', 'candidato', 'ano'],
+    "Apoiador": ['CPF', 'EquipeOrdem', 'EquipeCandidaturaCandidato', 'EquipeCandidaturaAno'],
+    "DoadorJuridico": ['CNPJ'],
+    "DoacaoJuridica": ['DoadorJuridico', 'CandidaturaCandidato', 'CandidaturaAno'],
+    "DoacaoFisica": ['ordem', 'DoadorFisico', 'CandidaturaCandidato', 'CandidaturaAno']
+}
+
 def conectar():
     return psycopg2.connect(
         dbname=dbname,
@@ -77,24 +92,74 @@ def consultar(tabela):
 
     input("Pressione enter para retornar ao menu: ")
 
+def obter_chaves_primarias(tabela):
+    """
+    Retorna as chaves primárias da tabela especificada.
+    """
+    if tabela in chaves_primarias:
+        return chaves_primarias[tabela]
+    else:
+        return []
+
 def remover(tabela):
     menu_base()
     print(f"\nRemoção de dados da tabela {tabela}:\n")
 
-    conn = conectar()
-    cur = conn.cursor()
-    sql = f"DELETE FROM {tabela}"
+    # Obter chaves primárias da tabela
+    chaves_primarias = obter_chaves_primarias(tabela)
 
-    try:
-        cur.execute(sql)
-        conn.commit()
-        print(f"Todos os dados da tabela {tabela} foram removidos com sucesso.")
-    except psycopg2.DatabaseError as ex:        
-        print("[ERRO] Erro interno na remoção dos dados")
-        print(ex)
+    # Perguntar ao usuário se ele quer remover todos os dados ou um dado específico
+    opcao = input("Digite '*' para remover todos os dados ou '1' para remover um dado específico: ").strip().upper()
 
-    cur.close()
-    conn.close()
+    if opcao == '*':
+        # Remover todos os dados
+        conn = conectar()
+        cur = conn.cursor()
+        sql = f"DELETE FROM {tabela}"
+
+        try:
+            cur.execute(sql)
+            conn.commit()
+            print(f"Todos os dados da tabela {tabela} foram removidos com sucesso.")
+        except psycopg2.DatabaseError as ex:
+            print("[ERRO] Erro interno na remoção dos dados")
+            print(ex)
+        finally:
+            cur.close()
+            conn.close()
+
+    elif opcao == '1' and chaves_primarias:
+        # Remover um dado específico
+        condicoes = []
+        valores = []
+
+        for chave in chaves_primarias:
+            valor = input(f"Digite o valor de {chave}: ").strip()
+            condicoes.append(f"{chave} = %s")
+            valores.append(valor)
+
+        condicao_sql = " AND ".join(condicoes)
+        sql = f"DELETE FROM {tabela} WHERE {condicao_sql}"
+
+        conn = conectar()
+        cur = conn.cursor()
+
+        try:
+            cur.execute(sql, valores)
+            conn.commit()
+            if cur.rowcount > 0:
+                print(f"O dado específico da tabela {tabela} foi removido com sucesso.")
+            else:
+                print("Nenhum dado correspondente foi encontrado para remoção.")
+        except psycopg2.DatabaseError as ex:
+            print("[ERRO] Erro interno na remoção dos dados")
+            print(ex)
+        finally:
+            cur.close()
+            conn.close()
+
+    else:
+        print("Opção inválida ou tabela sem chaves primárias definidas.")
 
     input("Pressione enter para retornar ao menu: ")
 
@@ -105,7 +170,7 @@ def listar_candidaturas(ano=None, nome_candidato=None, nome_cargo=None, ordenaca
     conn = conectar()
     cur = conn.cursor()
     
-    sql = f"""
+    sql = """
             SELECT 
                 c.candidato,
                 candidato.nome,
@@ -120,14 +185,20 @@ def listar_candidaturas(ano=None, nome_candidato=None, nome_cargo=None, ordenaca
             ON c.candidato = candidato.cpf 
             LEFT JOIN Individuo vice
             ON c.Vice = vice.CPF
+            WHERE TRUE
             """
     if ano:
-        sql += f" AND Ano = {ano}"
+        sql += f" AND c.ano = {ano}"
     if nome_candidato:
-        sql += f" AND Candidato = '{nome_candidato}'"
+        sql += f" AND candidato.nome = '{nome_candidato}'"
     if nome_cargo:
-        sql += f" AND \"Nome do Cargo\" = '{nome_cargo}'"
-    sql += f" ORDER BY {ordenacao}"
+        sql += f" AND c.cargonome = '{nome_cargo}'"
+
+    if ordenacao == "Ano":
+        sql += f" ORDER BY c.ano"
+    elif ordenacao == "Local":
+        sql += f" ORDER BY c.cargolocal"
+
 
     headers = ["CPF Candidato", "Nome Candidato", "Ano Candidatura", "Nome do Cargo", "Local do Cargo", "CPF Vice", "Nome Vice", "Pleito"]
 
@@ -237,32 +308,32 @@ def menu_principal():
 
 def menu_consultar():
     menu_base()
-    print("    1 - Consultar Individuo")
-    print("    2 - Consultar ProcessoJudicial")
-    print("    3 - Consultar Partido")
-    print("    4 - Consultar Candidato")
-    print("    5 - Consultar Cargo")
-    print("    6 - Consultar Candidatura")
-    print("    7 - Consultar EquipeDeApoio")
-    print("    8 - Consultar Apoiador")
-    print("    9 - Consultar DoadorJuridico")
-    print("    10 - Consultar DoacaoJuridica")
-    print("    11 - Consultar DoacaoFisica")
+    print("    1 - Consultar Individuos")
+    print("    2 - Consultar Processos Judiciais")
+    print("    3 - Consultar Partidos")
+    print("    4 - Consultar Candidatos")
+    print("    5 - Consultar Cargos")
+    print("    6 - Consultar Candidaturas")
+    print("    7 - Consultar Equipes De Apoio")
+    print("    8 - Consultar Apoiadores")
+    print("    9 - Consultar Doadores Juridicos")
+    print("    10 - Consultar Doações Juridicas")
+    print("    11 - Consultar Doações Fisicas")
     print("    0 - Retornar\n")
 
 def menu_remover():
     menu_base()
     print("    1 - Remover Individuo")
-    print("    2 - Remover ProcessoJudicial")
+    print("    2 - Remover Processo Judicial")
     print("    3 - Remover Partido")
     print("    4 - Remover Candidato")
     print("    5 - Remover Cargo")
     print("    6 - Remover Candidatura")
-    print("    7 - Remover EquipeDeApoio")
+    print("    7 - Remover Equipe De Apoio")
     print("    8 - Remover Apoiador")
-    print("    9 - Remover DoadorJuridico")
-    print("    10 - Remover DoacaoJuridica")
-    print("    11 - Remover DoacaoFisica")
+    print("    9 - Remover Doador Juridico")
+    print("    10 - Remover Doacao Juridica")
+    print("    11 - Remover Doacao Fisica")
     print("    0 - Retornar\n")
 
 def processar_opcao(opcao):
@@ -353,7 +424,7 @@ def processar_opcao(opcao):
         ano = input("Ano: ") or None
         nome_candidato = input("Nome do candidato: ") or None
         nome_cargo = input("Nome do cargo: ") or None
-        ordenacao = input("Ordenação (Ano, Candidato, Cargo): ") or 'Ano'
+        ordenacao = input("Ordenação (Ano ou Local): ") or 'Ano'
         listar_candidaturas(ano, nome_candidato, nome_cargo, ordenacao)
 
     elif opcao == 4:

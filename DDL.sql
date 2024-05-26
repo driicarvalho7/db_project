@@ -180,9 +180,14 @@ BEGIN
 
     -- Impedir a criação do candidato
     RAISE EXCEPTION 'O indivíduo % tem processos judiciais finalizados nos últimos 5 anos e não pode ser candidato.', NEW.CPF;
+  ELSE
+    -- Se não houver processos finalizados nos últimos 5 anos, atualizar ficha para 'LIMPA'
+    UPDATE Individuo
+    SET ficha = 'LIMPA'
+    WHERE CPF = NEW.CPF;
   END IF;
 
-  -- Se não houver processos finalizados nos últimos 5 anos, permitir a criação
+  -- Permitir a criação do candidato
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
